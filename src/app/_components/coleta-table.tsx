@@ -36,10 +36,25 @@ export function ColetaTable({ itens }: ColetaTableProps) {
   const [ordenacao, setOrdenacao] =
     useState<Ordenacao>("Menor Preço");
   const [pagina, setPagina] = useState(1);
+  const itensUnicos = useMemo(() => {
+    const porSku = new Map<string, ColetaItem>();
 
+    for (const item of itens) {
+      const atual = porSku.get(item.sku);
+      if (
+        !atual ||
+        parsePrecoBR(item.precoPraticado) <
+          parsePrecoBR(atual.precoPraticado)
+      ) {
+        porSku.set(item.sku, item);
+      }
+    }
+
+    return [...porSku.values()];
+  }, [itens]);
   // ordena a lista inteira conforme a escolha
   const itensOrdenados = useMemo(() => {
-    const copia = [...itens];
+    const copia = [...itensUnicos];
     copia.sort((a, b) => {
       if (ordenacao === "Menor Preço") {
         // menor preço praticado primeiro (crescente)
@@ -55,7 +70,7 @@ export function ColetaTable({ itens }: ColetaTableProps) {
       );
     });
     return copia;
-  }, [itens, ordenacao]);
+  }, [itensUnicos, ordenacao]);
 
   const totalPaginas = Math.ceil(
     itensOrdenados.length / ITENS_POR_PAGINA,

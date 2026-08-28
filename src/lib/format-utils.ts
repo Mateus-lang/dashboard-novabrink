@@ -72,20 +72,24 @@ export function calcularSaudePreco(
 ): { larguraPct: number; status: StatusPreco } | null {
   if (
     !Number.isFinite(praticado) ||
-    !Number.isFinite(minimo) ||
     !Number.isFinite(sugerido)
-  ) {
+  )
     return null;
-  }
+  if (sugerido <= 0) return null;
 
-  const faixa = sugerido - minimo;
-  if (faixa <= 0) return null;
+  // quanto o preço praticado está abaixo do sugerido, em fração (0 = preço cheio)
+  const queima = (sugerido - praticado) / sugerido;
 
-  const t = (praticado - minimo) / faixa;
+  const larguraPct = Math.max(0, Math.min(1, queima)) * 100;
 
   const status: StatusPreco =
-    t < 0 ? "abaixo" : t < 0.3 ? "atencao" : "saudavel";
-  const larguraPct = t < 0 ? 6 : Math.min(1, t) * 100;
+    Number.isFinite(minimo) &&
+    minimo > 0 &&
+    praticado < minimo
+      ? "abaixo"
+      : queima > 0.15
+        ? "atencao"
+        : "saudavel";
 
   return { larguraPct, status };
 }
