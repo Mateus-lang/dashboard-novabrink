@@ -124,7 +124,7 @@ export function Dashboard({
           <KpiCard
             titulo="Abaixo do mínimo aceitável"
             valor={kpis.abaixoDoMinimo}
-            detalhe="itens que furaram o piso"
+            detalhe={`${kpis.pctAbaixoDoMinimo}% dos anúncios monitorados`}
             destaque={
               kpis.abaixoDoMinimo > 0 ? "alerta" : "neutro"
             }

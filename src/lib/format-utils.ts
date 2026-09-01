@@ -1,4 +1,8 @@
 import { ColetaItem } from "./sheets";
+import {
+  chaveAnuncio,
+  normalizarNome,
+} from "./anuncio-utils";
 
 // Converte "R$ 1.234,56" (formato brasileiro) em 1234.56 (número)
 export function parsePrecoBR(preco: string): number {
@@ -28,41 +32,59 @@ export type KpisResumo = {
   // null quando o período não tem nenhum preço válido
   menorPrecoItem: ColetaItem | null;
   abaixoDoMinimo: number;
+  pctAbaixoDoMinimo: number;
 };
 
 export function calcularKpis(
   itens: ColetaItem[],
 ): KpisResumo {
-  const totalAnuncios = itens.length;
+  // a planilha é coletada todo dia: contar linhas contaria o mesmo
+  // anúncio uma vez por coleta
+  const anuncios = new Set<string>();
+  const anunciosAbaixo = new Set<string>();
 
   // menor preço praticado do período + o anúncio que o praticou
   let menorPreco = 0;
   let menorPrecoItem: ColetaItem | null = null;
 
   for (const item of itens) {
-    const preco = parsePrecoBR(item.precoPraticado);
+    // um anúncio é a oferta DE UM VENDEDOR. No Mercado Livre e na Amazon
+    // várias lojas disputam a mesma página de produto, então a chave da
+    // página sozinha fundiria ofertas concorrentes numa só.
+    const chave = `${normalizarNome(item.loja ?? "")}|${chaveAnuncio(item)}`;
+    anuncios.add(chave);
+
+    const praticado = parsePrecoBR(item.precoPraticado);
+    const minimo = parsePrecoBR(item.minAceitavel);
+
+    // o praticado > 0 importa: célula vazia vira 0, e 0 < minimo
+    // seria lido como "furou o piso"
+    if (minimo > 0 && praticado > 0 && praticado < minimo) {
+      anunciosAbaixo.add(chave);
+    }
+
     // parsePrecoBR devolve 0 pra célula vazia/inválida —
     // num mínimo, o 0 ganharia sempre
-    if (preco <= 0) continue;
+    if (praticado <= 0) continue;
 
-    if (!menorPrecoItem || preco < menorPreco) {
-      menorPreco = preco;
+    if (!menorPrecoItem || praticado < menorPreco) {
+      menorPreco = praticado;
       menorPrecoItem = item;
     }
   }
 
-  // quantos itens têm preço praticado abaixo do mínimo aceitável
-  const abaixoDoMinimo = itens.filter((item) => {
-    const praticado = parsePrecoBR(item.precoPraticado);
-    const minimo = parsePrecoBR(item.minAceitavel);
-    return minimo > 0 && praticado < minimo;
-  }).length;
+  const totalAnuncios = anuncios.size;
+  const abaixoDoMinimo = anunciosAbaixo.size;
 
   return {
     totalAnuncios,
     menorPreco,
     menorPrecoItem,
     abaixoDoMinimo,
+    pctAbaixoDoMinimo:
+      totalAnuncios > 0
+        ? Math.round((abaixoDoMinimo / totalAnuncios) * 100)
+        : 0,
   };
 }
 
