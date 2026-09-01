@@ -14,12 +14,22 @@ import { KpiCard } from "@/app/_components/kpi-card";
 import { DateRangeFilter } from "@/app/_components/date-range-filter";
 import { ColetaTable } from "@/app/_components/coleta-table";
 import { ThemeToggle } from "@/app/_components/theme-toggle";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { QueimaPrecoChart } from "./queima-preco-chart";
+import { VendedoresKAccountChart } from "./vendedores-k-account-chart";
 
 type DashboardProps = {
   itensIniciais: ColetaItem[];
 };
 
-export function Dashboard({ itensIniciais }: DashboardProps) {
+export function Dashboard({
+  itensIniciais,
+}: DashboardProps) {
   // hoje = data real do sistema (início do dia)
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -95,11 +105,34 @@ export function Dashboard({ itensIniciais }: DashboardProps) {
         </div>
 
         {/* Tabela */}
-        <div>
+        <div className="mb-25">
           <h2 className="mb-3 text-lg font-semibold">
             Ranking · Menor Preço por Item
           </h2>
           <ColetaTable itens={itensFiltrados} />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Maior Queima de Preço</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <QueimaPrecoChart itens={itensFiltrados} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Vendedores por K-Account
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <VendedoresKAccountChart
+                itens={itensFiltrados}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
