@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 import { ColetaItem } from "@/lib/sheets";
 import { estaNoPeriodo } from "@/lib/date-utils";
@@ -73,7 +74,15 @@ export function Dashboard({
               Inteligência de preço · E-Commerce
             </p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/details"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Detalhes
+            </Link>
+            <ThemeToggle />
+          </div>
         </header>
 
         {/* KPIs */}
