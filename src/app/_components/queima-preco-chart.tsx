@@ -47,10 +47,10 @@ export function QueimaPrecoChart({
           <YAxis
             type="category"
             dataKey="nome"
-            width={160}
+            width={200}
             tick={{ fontSize: 12 }}
             tickFormatter={(v: string) =>
-              v.length > 22 ? `${v.slice(0, 22)}…` : v
+              v.length > 28 ? `${v.slice(0, 28)}…` : v
             }
           />
           <Tooltip

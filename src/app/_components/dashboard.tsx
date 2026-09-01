@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
+import { ExternalLink } from "lucide-react";
 
 import { ColetaItem } from "@/lib/sheets";
 import { estaNoPeriodo } from "@/lib/date-utils";
@@ -13,6 +14,7 @@ import {
 import { KpiCard } from "@/app/_components/kpi-card";
 import { DateRangeFilter } from "@/app/_components/date-range-filter";
 import { ColetaTable } from "@/app/_components/coleta-table";
+import { RefreshButton } from "@/app/_components/refresh-button";
 import { ThemeToggle } from "@/app/_components/theme-toggle";
 import {
   Card,
@@ -82,9 +84,33 @@ export function Dashboard({
             detalhe="no período selecionado"
           />
           <KpiCard
-            titulo="Menor preço médio"
-            valor={formatPrecoBR(kpis.menorPrecoMedio)}
-            detalhe="média dos preços praticados"
+            titulo="Menor preço encontrado"
+            valor={
+              kpis.menorPrecoItem
+                ? formatPrecoBR(kpis.menorPreco)
+                : "—"
+            }
+            detalhe={
+              kpis.menorPrecoItem && (
+                <span className="flex items-center gap-1.5">
+                  <span className="truncate">
+                    {kpis.menorPrecoItem.sku} ·{" "}
+                    {kpis.menorPrecoItem.termoBusca}
+                  </span>
+                  {kpis.menorPrecoItem.url && (
+                    <a
+                      href={kpis.menorPrecoItem.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Abrir anúncio no marketplace"
+                      className="shrink-0 text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                </span>
+              )
+            }
           />
           <KpiCard
             titulo="Abaixo do mínimo aceitável"
@@ -97,11 +123,12 @@ export function Dashboard({
         </div>
 
         {/* Filtro */}
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <DateRangeFilter
             periodo={periodo}
             onPeriodoChange={setPeriodo}
           />
+          <RefreshButton />
         </div>
 
         {/* Tabela */}

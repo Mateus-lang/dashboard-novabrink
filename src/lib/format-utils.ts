@@ -24,7 +24,9 @@ export function formatPrecoBR(valor: number): string {
 
 export type KpisResumo = {
   totalAnuncios: number;
-  menorPrecoMedio: number;
+  menorPreco: number;
+  // null quando o período não tem nenhum preço válido
+  menorPrecoItem: ColetaItem | null;
   abaixoDoMinimo: number;
 };
 
@@ -33,14 +35,21 @@ export function calcularKpis(
 ): KpisResumo {
   const totalAnuncios = itens.length;
 
-  // média dos preços praticados
-  const somaPrecos = itens.reduce(
-    (soma, item) =>
-      soma + parsePrecoBR(item.precoPraticado),
-    0,
-  );
-  const menorPrecoMedio =
-    totalAnuncios > 0 ? somaPrecos / totalAnuncios : 0;
+  // menor preço praticado do período + o anúncio que o praticou
+  let menorPreco = 0;
+  let menorPrecoItem: ColetaItem | null = null;
+
+  for (const item of itens) {
+    const preco = parsePrecoBR(item.precoPraticado);
+    // parsePrecoBR devolve 0 pra célula vazia/inválida —
+    // num mínimo, o 0 ganharia sempre
+    if (preco <= 0) continue;
+
+    if (!menorPrecoItem || preco < menorPreco) {
+      menorPreco = preco;
+      menorPrecoItem = item;
+    }
+  }
 
   // quantos itens têm preço praticado abaixo do mínimo aceitável
   const abaixoDoMinimo = itens.filter((item) => {
@@ -49,7 +58,12 @@ export function calcularKpis(
     return minimo > 0 && praticado < minimo;
   }).length;
 
-  return { totalAnuncios, menorPrecoMedio, abaixoDoMinimo };
+  return {
+    totalAnuncios,
+    menorPreco,
+    menorPrecoItem,
+    abaixoDoMinimo,
+  };
 }
 
 // Converte "40,57%" em 40.57 (número)

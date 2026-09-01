@@ -72,24 +72,25 @@ export function ColetaTable({ itens }: ColetaTableProps) {
     return copia;
   }, [itensUnicos, ordenacao]);
 
-  const totalPaginas = Math.ceil(
-    itensOrdenados.length / ITENS_POR_PAGINA,
+  // pelo menos 1 pagina, mesmo com a lista vazia
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(itensOrdenados.length / ITENS_POR_PAGINA),
   );
+
+  // `pagina` e o que o usuario pediu; `paginaAtual` e o que da pra mostrar agora.
+  // Se o filtro encolheu a lista, o clamp segura na ultima pagina valida
+  // sem precisar de setState durante a renderizacao.
+  const paginaAtual = Math.min(pagina, totalPaginas);
 
   // fatia só os itens da página atual
   const itensDaPagina = useMemo(() => {
-    const inicio = (pagina - 1) * ITENS_POR_PAGINA;
+    const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
     return itensOrdenados.slice(
       inicio,
       inicio + ITENS_POR_PAGINA,
     );
-  }, [itensOrdenados, pagina]);
-
-  // se a lista encolheu (mudou o filtro) e a página atual não existe mais,
-  // volta pra primeira — evita mostrar página vazia
-  if (pagina > totalPaginas && totalPaginas > 0) {
-    setPagina(1);
-  }
+  }, [itensOrdenados, paginaAtual]);
 
   if (itens.length === 0) {
     return (
@@ -231,25 +232,25 @@ export function ColetaTable({ itens }: ColetaTableProps) {
       {totalPaginas > 1 && (
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
-            Página {pagina} de {totalPaginas}
+            Página {paginaAtual} de {totalPaginas}
           </span>
           <div className="flex gap-2">
             <button
               onClick={() =>
-                setPagina((p) => Math.max(1, p - 1))
+                setPagina(Math.max(1, paginaAtual - 1))
               }
-              disabled={pagina === 1}
+              disabled={paginaAtual === 1}
               className="inline-flex h-9 items-center rounded-md border border-input px-3 text-sm transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
             >
               Anterior
             </button>
             <button
               onClick={() =>
-                setPagina((p) =>
-                  Math.min(totalPaginas, p + 1),
+                setPagina(
+                  Math.min(totalPaginas, paginaAtual + 1),
                 )
               }
-              disabled={pagina === totalPaginas}
+              disabled={paginaAtual === totalPaginas}
               className="inline-flex h-9 items-center rounded-md border border-input px-3 text-sm transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
             >
               Próxima

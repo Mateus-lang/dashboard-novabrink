@@ -21,7 +21,7 @@ export function agruparQueimaPorSku(
     const atual = porSku.get(item.sku);
     if (!atual || desconto > atual.desconto) {
       porSku.set(item.sku, {
-        nome: item.termoBusca,
+        nome: `${item.sku} · ${item.termoBusca}`,
         desconto,
       });
     }

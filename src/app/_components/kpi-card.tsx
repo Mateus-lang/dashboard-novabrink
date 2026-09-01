@@ -5,11 +5,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 type KpiCardProps = {
   titulo: string;
   valor: string | number;
-  detalhe?: string;
+  detalhe?: ReactNode;
   destaque?: "neutro" | "alerta";
 };
 
@@ -36,9 +37,9 @@ export function KpiCard({
           {valor}
         </div>
         {detalhe && (
-          <p className="mt-1 text-xs text-muted-foreground">
+          <div className="mt-1 text-xs text-muted-foreground">
             {detalhe}
-          </p>
+          </div>
         )}
       </CardContent>
     </Card>
