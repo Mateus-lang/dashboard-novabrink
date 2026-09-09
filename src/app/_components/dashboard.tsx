@@ -67,6 +67,8 @@ export function Dashboard({
         <Header
           title="Monitoramento de Preços"
           subtitle="Inteligência de preço · E-Commerce"
+          linkTitle="Detalhes"
+          navigate="/details"
         />
 
         {/* KPIs */}

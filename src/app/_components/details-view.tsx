@@ -54,6 +54,8 @@ export function DetailsView({
         <Header
           title="Detalhes"
           subtitle="Inteligência de preço · E-Commerce"
+          linkTitle="<- Voltar"
+          navigate="/"
         />
 
         {/* Filtro */}

@@ -4,8 +4,15 @@ import Link from "next/link";
 interface headerProps {
   title: string;
   subtitle?: string;
+  linkTitle: string;
+  navigate: string;
 }
-const Header = ({ title, subtitle }: headerProps) => {
+const Header = ({
+  title,
+  subtitle,
+  linkTitle,
+  navigate,
+}: headerProps) => {
   return (
     <div className="mb-8 flex items-center justify-between">
       <div>
@@ -28,10 +35,10 @@ const Header = ({ title, subtitle }: headerProps) => {
       </div>
       <div className="flex items-center gap-3">
         <Link
-          href="/details"
+          href={navigate}
           className="text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          Detalhes
+          {linkTitle}
         </Link>
         <ThemeToggle />
       </div>
