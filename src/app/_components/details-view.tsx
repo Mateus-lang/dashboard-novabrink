@@ -2,14 +2,12 @@
 
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
-import Link from "next/link";
 
 import { ColetaItem } from "@/lib/sheets";
 import { estaNoPeriodo } from "@/lib/date-utils";
 
 import { DateRangeFilter } from "@/app/_components/date-range-filter";
 import { RefreshButton } from "@/app/_components/refresh-button";
-import { ThemeToggle } from "@/app/_components/theme-toggle";
 import { QueimaVendedorChart } from "@/app/_components/queima-vendedor-chart";
 import {
   Card,
@@ -18,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Header from "./header";
 
 type DetailsViewProps = {
   itensIniciais: ColetaItem[];
@@ -52,25 +51,10 @@ export function DetailsView({
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
-        <header className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Detalhes
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Inteligência de preço · E-Commerce
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              ← Voltar
-            </Link>
-            <ThemeToggle />
-          </div>
-        </header>
+        <Header
+          title="Detalhes"
+          subtitle="Inteligência de preço · E-Commerce"
+        />
 
         {/* Filtro */}
         <div className="mb-6 flex items-center justify-between gap-3">
@@ -87,8 +71,8 @@ export function DetailsView({
               Vendedores queimando preço
             </CardTitle>
             <CardDescription>
-              Anúncios únicos com preço 10% ou mais abaixo do
-              preço sugerido
+              Anúncios únicos com preço 10% ou mais abaixo
+              do preço sugerido
             </CardDescription>
           </CardHeader>
           <CardContent>

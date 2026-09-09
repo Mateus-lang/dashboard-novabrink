@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { ExternalLink } from "lucide-react";
-import Link from "next/link";
 
 import { ColetaItem } from "@/lib/sheets";
 import { estaNoPeriodo } from "@/lib/date-utils";
@@ -16,7 +15,6 @@ import { KpiCard } from "@/app/_components/kpi-card";
 import { DateRangeFilter } from "@/app/_components/date-range-filter";
 import { ColetaTable } from "@/app/_components/coleta-table";
 import { RefreshButton } from "@/app/_components/refresh-button";
-import { ThemeToggle } from "@/app/_components/theme-toggle";
 import {
   Card,
   CardContent,
@@ -25,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { QueimaPrecoChart } from "./queima-preco-chart";
 import { VendedoresKAccountChart } from "./vendedores-k-account-chart";
+import Header from "./header";
 
 type DashboardProps = {
   itensIniciais: ColetaItem[];
@@ -65,25 +64,10 @@ export function Dashboard({
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
-        <header className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Monitoramento de Preços
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Inteligência de preço · E-Commerce
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/details"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Detalhes
-            </Link>
-            <ThemeToggle />
-          </div>
-        </header>
+        <Header
+          title="Monitoramento de Preços"
+          subtitle="Inteligência de preço · E-Commerce"
+        />
 
         {/* KPIs */}
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
