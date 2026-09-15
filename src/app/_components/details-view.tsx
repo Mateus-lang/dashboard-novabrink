@@ -6,6 +6,7 @@ import type { DateRange } from "react-day-picker";
 import { ColetaItem } from "@/lib/sheets";
 import { estaNoPeriodo } from "@/lib/date-utils";
 
+import { ColetaTable } from "@/app/_components/coleta-table";
 import { DateRangeFilter } from "@/app/_components/date-range-filter";
 import { RefreshButton } from "@/app/_components/refresh-button";
 import { QueimaVendedorChart } from "@/app/_components/queima-vendedor-chart";
@@ -65,6 +66,17 @@ export function DetailsView({
             onPeriodoChange={setPeriodo}
           />
           <RefreshButton />
+        </div>
+
+        {/* Tabela completa da coleta */}
+        <div className="mb-6">
+          <h2 className="mb-3 text-lg font-semibold">
+            Coleta completa
+          </h2>
+          <ColetaTable
+            itens={itensFiltrados}
+            modo="completo"
+          />
         </div>
 
         <Card>

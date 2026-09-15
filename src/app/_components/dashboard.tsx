@@ -129,7 +129,7 @@ export function Dashboard({
         {/* Tabela */}
         <div className="mb-25">
           <h2 className="mb-3 text-lg font-semibold">
-            Ranking · Menor Preço por Item
+            Ranking · 2 Menores Preços por Item
           </h2>
           <ColetaTable itens={itensFiltrados} />
         </div>
