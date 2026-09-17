@@ -10,6 +10,8 @@ import { ColetaTable } from "@/app/_components/coleta-table";
 import { DateRangeFilter } from "@/app/_components/date-range-filter";
 import { RefreshButton } from "@/app/_components/refresh-button";
 import { QueimaVendedorChart } from "@/app/_components/queima-vendedor-chart";
+import { AnunciosVersaoChart } from "@/app/_components/anuncios-versao-chart";
+import { ComparativoVersaoChart } from "@/app/_components/comparativo-versao-chart";
 import {
   Card,
   CardContent,
@@ -93,6 +95,39 @@ export function DetailsView({
             <QueimaVendedorChart itens={itensFiltrados} />
           </CardContent>
         </Card>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Anúncios únicos por versão
+              </CardTitle>
+              <CardDescription>
+                Ofertas distintas no período, agrupadas pela
+                versão do item
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AnunciosVersaoChart itens={itensFiltrados} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Comparativo entre versões
+              </CardTitle>
+              <CardDescription>
+                Participação de cada versão no total de
+                anúncios do período
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ComparativoVersaoChart
+                itens={itensFiltrados}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

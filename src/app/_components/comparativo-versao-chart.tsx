@@ -10,19 +10,20 @@ import {
 } from "recharts";
 import {
   CORES_SERIE,
-  contarVendedoresPorKAccount,
+  contarAnunciosPorVersao,
 } from "@/lib/chart-utils";
 import { ColetaItem } from "@/lib/sheets";
 import { useMemo } from "react";
 
-
-export function VendedoresKAccountChart({
+// Comparativo entre todas as versões: de propósito não recebe o filtro de versão
+// do gráfico ao lado — uma rosca de uma fatia só não compara nada.
+export function ComparativoVersaoChart({
   itens,
 }: {
   itens: ColetaItem[];
 }) {
   const dados = useMemo(
-    () => contarVendedoresPorKAccount(itens),
+    () => contarAnunciosPorVersao(itens),
     [itens],
   );
 
@@ -100,7 +101,7 @@ export function VendedoresKAccountChart({
             formatter={(value, name) => {
               const total = Number(value);
               return [
-                `${total} ${total === 1 ? "vendedor" : "vendedores"}`,
+                `${total} ${total === 1 ? "anúncio" : "anúncios"}`,
                 name,
               ];
             }}

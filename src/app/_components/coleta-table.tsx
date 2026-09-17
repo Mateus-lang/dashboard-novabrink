@@ -32,7 +32,7 @@ type Ordenacao = "Menor Preço" | "Maior Desconto %";
 // "completo": toda linha da planilha no período, sem agrupar (detalhes).
 type Modo = "ranking" | "completo";
 
-const SKUS_POR_PAGINA = 10;
+const SKUS_POR_PAGINA = 5;
 const TAMANHOS_DE_PAGINA = [10, 25, 50, 100];
 const TAMANHO_PADRAO_COMPLETO = 50;
 

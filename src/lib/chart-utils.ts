@@ -6,6 +6,7 @@ import {
 } from "./format-utils";
 import {
   chaveAnuncio,
+  chaveOferta,
   normalizarNome,
 } from "./anuncio-utils";
 
@@ -110,4 +111,65 @@ export function contarQueimaPorVendedor(
     }))
     .sort((a, b) => b.total - a.total)
     .slice(0, limite);
+}
+
+// Paleta das fatias das roscas. Vive aqui, e não em cada gráfico, pra que os
+// dois donuts do app pintem suas séries com as mesmas cores na mesma ordem.
+export const CORES_SERIE = [
+  "#6366f1",
+  "#22c55e",
+  "#f59e0b",
+  "#ec4899",
+  "#06b6d4",
+  "#a855f7",
+];
+
+export type VersaoItem = {
+  nome: string; // a versão do item (PDV, E-COM, …)
+  total: number; // anúncios únicos do período nessa versão
+};
+
+// A planilha traz "PDV" e "pdv" entre coletas; sem normalizar, a mesma versão
+// viraria duas barras. Célula vazia cai num rótulo próprio em vez de sumir.
+export function rotuloVersao(item: ColetaItem): string {
+  return normalizarNome(item.versao ?? "") || "Sem versão";
+}
+
+// Anúncios distintos numa lista, ignorando a versão. A planilha é coletada todo
+// dia, então contar linhas contaria o mesmo anúncio uma vez por coleta.
+export function contarAnunciosUnicos(
+  itens: ColetaItem[],
+): number {
+  return new Set(itens.map(chaveOferta)).size;
+}
+
+// Quantos anúncios únicos cada versão tem no período. Sem limite: são poucas
+// versões, e cortar a cauda esconderia justamente a comparação que o gráfico existe
+// pra mostrar.
+//
+// A soma das versões pode passar do total de anúncios distintos: o mesmo anúncio
+// de uma loja pode ter sido casado com SKUs de versões diferentes em dias
+// diferentes de coleta. Ele conta nas duas versões de propósito — atribuí-lo a
+// uma só seria escolha arbitrária —, por isso quem mostra o total usa
+// contarAnunciosUnicos em vez de somar as barras.
+export function contarAnunciosPorVersao(
+  itens: ColetaItem[],
+): VersaoItem[] {
+  const porVersao = new Map<string, Set<string>>();
+
+  for (const item of itens) {
+    const versao = rotuloVersao(item);
+
+    if (!porVersao.has(versao)) {
+      porVersao.set(versao, new Set());
+    }
+    porVersao.get(versao)!.add(chaveOferta(item));
+  }
+
+  return [...porVersao.entries()]
+    .map(([nome, anuncios]) => ({
+      nome,
+      total: anuncios.size,
+    }))
+    .sort((a, b) => b.total - a.total);
 }

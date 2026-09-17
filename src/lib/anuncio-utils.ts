@@ -31,3 +31,10 @@ export function chaveAnuncio(item: ColetaItem): string {
     return url;
   }
 }
+
+// Um anúncio é a oferta DE UM VENDEDOR: no Mercado Livre e na Amazon várias
+// lojas disputam a mesma página de produto, então a chave da página sozinha
+// fundiria ofertas concorrentes numa só.
+export function chaveOferta(item: ColetaItem): string {
+  return `${normalizarNome(item.loja ?? "")}|${chaveAnuncio(item)}`;
+}
