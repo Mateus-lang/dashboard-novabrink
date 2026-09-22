@@ -1,16 +1,28 @@
 "use client";
 
 import { useActionState } from "react";
-import { AlertTriangle, Check, ExternalLink, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ClipboardPaste,
+  ExternalLink,
+  Search,
+} from "lucide-react";
 
 import { processarColeta } from "@/app/nova-coleta/actions";
 import { ESTADO_INICIAL, type EstadoColeta } from "@/app/nova-coleta/estado";
-import { ROTULOS, VERSOES, type CampoRascunho } from "@/lib/coleta-tipos";
+import {
+  ROTULOS,
+  ROTULOS_ORIGEM,
+  VERSOES,
+  type CampoRascunho,
+} from "@/lib/coleta-tipos";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -160,10 +172,13 @@ function EtapaRevisao({ estado, pendente }: EtapaProps) {
           <Aviso key={aviso} mensagem={aviso} />
         ))}
 
+        {estado.pedirColagem && <ColarPagina pendente={pendente} />}
+
         <div className="grid gap-4 sm:grid-cols-2">
           {CAMPOS_REVISAO.map((campo) => {
             const faltando = estado.pendentes.includes(campo);
             const ajuda = AJUDA[campo];
+            const origem = estado.origens[campo];
 
             return (
               <div key={campo} className="space-y-2">
@@ -172,6 +187,13 @@ function EtapaRevisao({ estado, pendente }: EtapaProps) {
                   {faltando && (
                     <span className="text-xs font-normal text-destructive">
                       preencher
+                    </span>
+                  )}
+                  {/* de onde veio o valor: o operador confere com atenção o
+                      que a IA deduziu e passa batido no que a API garantiu */}
+                  {!faltando && origem && (
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {ROTULOS_ORIGEM[origem]}
                     </span>
                   )}
                 </Label>
@@ -225,6 +247,40 @@ function EtapaRevisao({ estado, pendente }: EtapaProps) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// Metade das coletas vem de lojas que recusam conexão de servidor (Shopee,
+// Magalu, Le Biscuit) — nenhuma busca automática alcança essas páginas. O
+// navegador do operador alcança: ele já está com o anúncio aberto pra copiar a
+// URL, então copiar a página inteira é o mesmo gesto.
+function ColarPagina({ pendente }: { pendente: boolean }) {
+  return (
+    <div className="space-y-2 rounded-md border border-dashed p-4">
+      <p className="text-sm font-medium">
+        Cole a página para preencher automaticamente
+      </p>
+      <p className="text-xs text-muted-foreground">
+        Abra o anúncio no navegador, selecione tudo (⌘A), copie (⌘C) e cole
+        aqui. Ou preencha os campos abaixo à mão.
+      </p>
+      <Textarea
+        name="paginaColada"
+        rows={4}
+        placeholder="Cole aqui o conteúdo da página do anúncio…"
+      />
+      <Button
+        type="submit"
+        name="acao"
+        value="extrair-colagem"
+        variant="outline"
+        disabled={pendente}
+        formNoValidate
+      >
+        <ClipboardPaste className="h-4 w-4" />
+        {pendente ? "Lendo…" : "Extrair do texto colado"}
+      </Button>
+    </div>
   );
 }
 

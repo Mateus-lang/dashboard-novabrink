@@ -46,3 +46,18 @@ export const ROTULOS: Record<CampoRascunho, string> = {
 export const CAMPOS_OBRIGATORIOS = (
   Object.keys(ROTULOS) as CampoRascunho[]
 ).filter((campo) => campo !== "observacoes");
+
+// De onde veio cada valor preenchido. É o que dá sentido à revisão: conferir
+// com atenção o que a IA deduziu e passar batido no que a API garantiu.
+export type Origem =
+  | "api"
+  | "json-ld"
+  | "ia"
+  | "historico";
+
+export const ROTULOS_ORIGEM: Record<Origem, string> = {
+  api: "API do Mercado Livre",
+  "json-ld": "dados da página",
+  ia: "IA",
+  historico: "coleta anterior",
+};
