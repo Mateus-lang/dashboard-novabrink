@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
-import { montarRascunho } from "@/lib/coleta-rascunho";
+import {
+  extrairDeTextoColado,
+  montarRascunho,
+} from "@/lib/coleta-rascunho";
 import {
   CAMPOS_OBRIGATORIOS,
   ROTULOS,
@@ -68,7 +71,7 @@ export async function processarColeta(
     }
 
     try {
-      const { rascunho, pendentes, avisos } =
+      const { rascunho, pendentes, avisos, origens, pedirColagem } =
         await montarRascunho({ url, sku, versao });
 
       return {
@@ -78,6 +81,8 @@ export async function processarColeta(
         rascunho,
         pendentes,
         avisos,
+        origens,
+        pedirColagem,
         erro: null,
       };
     } catch (erro) {
@@ -87,6 +92,39 @@ export async function processarColeta(
         etapa: "entrada",
         entrada: { url, sku, versao },
         erro: "falha ao consultar a planilha ou o marketplace",
+      };
+    }
+  }
+
+  if (acao === "extrair-colagem") {
+    const rascunho = lerRascunho(formData);
+    const texto = campoTexto(formData, "paginaColada");
+
+    try {
+      const resultado = await extrairDeTextoColado(
+        rascunho,
+        texto,
+      );
+
+      return {
+        ...anterior,
+        etapa: "revisao",
+        rascunho: resultado.rascunho,
+        pendentes: resultado.pendentes,
+        avisos: resultado.avisos,
+        // a colagem só sabe das origens que ela mesma preencheu; o que veio do
+        // histórico na busca anterior continua valendo
+        origens: { ...anterior.origens, ...resultado.origens },
+        pedirColagem: resultado.pedirColagem,
+        erro: null,
+      };
+    } catch (erro) {
+      console.error("Erro ao extrair do texto colado:", erro);
+      return {
+        ...anterior,
+        etapa: "revisao",
+        rascunho,
+        erro: "falha ao ler o texto colado",
       };
     }
   }

@@ -20,6 +20,11 @@ export type ColetaItem = {
   menorPrecoSku: string;
 };
 
+export type Gestor = {
+  loja: string;
+  gestor: string;
+};
+
 const auth = new google.auth.GoogleAuth({
   credentials: {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -76,6 +81,24 @@ export async function getColeta() {
     );
 
   return items;
+}
+
+// A coluna K-Account da Raw_Coleta é um VLOOKUP nesta aba. Loja que não está
+// aqui grava com o gestor vazio — silenciosamente, porque a fórmula usa
+// IFERROR. Ler a aba permite avisar disso na revisão, antes de gravar.
+export async function getGestores(): Promise<Gestor[]> {
+  const resposta = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    range: "Gestores!A:B",
+  });
+
+  return (resposta.data.values ?? [])
+    .slice(1)
+    .map((linha) => ({
+      loja: linha[0] ?? "",
+      gestor: linha[1] ?? "",
+    }))
+    .filter((g) => g.loja !== "");
 }
 
 // O que o app escreve numa linha nova. Faltam de propósito Preço Sugerido (H) e

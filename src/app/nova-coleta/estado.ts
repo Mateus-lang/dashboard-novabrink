@@ -1,5 +1,6 @@
 import type {
   CampoRascunho,
+  Origem,
   RascunhoColeta,
 } from "@/lib/coleta-tipos";
 
@@ -24,6 +25,10 @@ export type EstadoColeta = {
   rascunho: RascunhoColeta | null;
   pendentes: CampoRascunho[];
   avisos: string[];
+  // de onde veio cada valor preenchido, pra revisão saber no que prestar atenção
+  origens: Partial<Record<CampoRascunho, Origem>>;
+  // a loja bloqueou a leitura pelo servidor: a revisão oferece colar a página
+  pedirColagem: boolean;
   erro: string | null;
   gravadas: ColetaGravada[];
 };
@@ -34,6 +39,8 @@ export const ESTADO_INICIAL: EstadoColeta = {
   rascunho: null,
   pendentes: [],
   avisos: [],
+  origens: {},
+  pedirColagem: false,
   erro: null,
   gravadas: [],
 };
