@@ -4,14 +4,14 @@ import Link from "next/link";
 interface headerProps {
   title: string;
   subtitle?: string;
-  linkTitle: string;
-  navigate: string;
+  // lista, e não um link só: com dashboard, detalhes e nova coleta, cada
+  // página precisa apontar pras outras duas
+  links: { label: string; href: string }[];
 }
 const Header = ({
   title,
   subtitle,
-  linkTitle,
-  navigate,
+  links,
 }: headerProps) => {
   return (
     <div className="mb-8 flex items-center justify-between">
@@ -34,12 +34,15 @@ const Header = ({
         />
       </div>
       <div className="flex items-center gap-3">
-        <Link
-          href={navigate}
-          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {linkTitle}
-        </Link>
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {link.label}
+          </Link>
+        ))}
         <ThemeToggle />
       </div>
     </div>

@@ -29,7 +29,8 @@ const auth = new google.auth.GoogleAuth({
     ),
   },
   scopes: [
-    "https://www.googleapis.com/auth/spreadsheets.readonly",
+    // leitura e escrita: o formulário de nova coleta grava na Raw_Coleta
+    "https://www.googleapis.com/auth/spreadsheets",
   ],
 });
 
@@ -75,4 +76,131 @@ export async function getColeta() {
     );
 
   return items;
+}
+
+// O que o app escreve numa linha nova. Faltam de propósito Preço Sugerido (H) e
+// Min. Aceitável (I), que são fórmulas copiadas da linha 2, e K-Account (N),
+// Rank (O) e Desconto (P), que são ARRAYFORMULA ancoradas na linha 2 com
+// intervalo aberto — escrever nessas colunas as substitui por valor fixo e
+// quebra a coluna inteira com #REF!.
+export type LinhaColeta = {
+  marketplace: string;
+  sku: string;
+  versao: string;
+  termoBusca: string;
+  marca: string;
+  loja: string;
+  nomeAnuncio: string;
+  precoPraticado: number;
+  dataBusca: string;
+  url: string;
+  observacoes: string;
+};
+
+const ABA = "Raw_Coleta";
+
+let idDaAbaEmCache: number | null = null;
+
+async function obterIdDaAba(): Promise<number> {
+  if (idDaAbaEmCache !== null) return idDaAbaEmCache;
+
+  const planilha = await sheets.spreadsheets.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    fields: "sheets.properties(sheetId,title)",
+  });
+
+  const aba = planilha.data.sheets?.find(
+    (s) => s.properties?.title === ABA,
+  );
+
+  if (aba?.properties?.sheetId == null) {
+    throw new Error(`Aba ${ABA} não encontrada na planilha`);
+  }
+
+  idDaAbaEmCache = aba.properties.sheetId;
+  return idDaAbaEmCache;
+}
+
+export async function appendColeta(
+  linha: LinhaColeta,
+): Promise<number> {
+  // values.append não serve aqui: a coluna R (Menor Preço SKU) está preenchida
+  // muito além dos dados, e o append enxergaria a tabela indo até lá embaixo.
+  // A coluna A é a que delimita as linhas de verdade.
+  const coluna = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    range: `${ABA}!A:A`,
+  });
+
+  const numeroDaLinha =
+    (coluna.data.values?.length ?? 1) + 1;
+
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    requestBody: {
+      // USER_ENTERED faz o Sheets interpretar "17/09/2026" como data no locale
+      // pt_BR da planilha, em vez de guardar o texto cru
+      valueInputOption: "USER_ENTERED",
+      data: [
+        {
+          range: `${ABA}!A${numeroDaLinha}:G${numeroDaLinha}`,
+          values: [
+            [
+              linha.marketplace,
+              linha.sku,
+              linha.versao,
+              linha.termoBusca,
+              linha.marca,
+              linha.loja,
+              linha.nomeAnuncio,
+            ],
+          ],
+        },
+        {
+          range: `${ABA}!J${numeroDaLinha}:M${numeroDaLinha}`,
+          values: [
+            [
+              // a coluna guarda número; o "R$" é formatação da célula
+              linha.precoPraticado,
+              linha.dataBusca,
+              linha.url,
+              linha.observacoes,
+            ],
+          ],
+        },
+      ],
+    },
+  });
+
+  // H e I são fórmulas por linha. Copiar de H2:I2 com PASTE_FORMULA ajusta as
+  // referências relativas sozinho e evita ter que montar a fórmula em texto —
+  // que dependeria de como a API interpreta separador e decimal no locale pt_BR.
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          copyPaste: {
+            source: {
+              sheetId: await obterIdDaAba(),
+              startRowIndex: 1,
+              endRowIndex: 2,
+              startColumnIndex: 7,
+              endColumnIndex: 9,
+            },
+            destination: {
+              sheetId: await obterIdDaAba(),
+              startRowIndex: numeroDaLinha - 1,
+              endRowIndex: numeroDaLinha,
+              startColumnIndex: 7,
+              endColumnIndex: 9,
+            },
+            pasteType: "PASTE_FORMULA",
+          },
+        },
+      ],
+    },
+  });
+
+  return numeroDaLinha;
 }
