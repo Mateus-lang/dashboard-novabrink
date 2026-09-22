@@ -57,8 +57,10 @@ export function DetailsView({
         <Header
           title="Detalhes"
           subtitle="Inteligência de preço · E-Commerce"
-          linkTitle="<- Voltar"
-          navigate="/"
+          links={[
+            { label: "Nova coleta", href: "/nova-coleta" },
+            { label: "<- Voltar", href: "/" },
+          ]}
         />
 
         {/* Filtro */}

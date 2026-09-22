@@ -18,6 +18,26 @@ export function parsePrecoBR(preco: string): number {
   return isNaN(numero) ? 0 : numero;
 }
 
+// Mesma conversão, mas para o que o operador digita no formulário. parsePrecoBR
+// devolve 0 em entrada inválida, o que é seguro para leitura (ordena por último)
+// e perigoso para escrita: gravaria "abc" na planilha como preço zero.
+export function parsePrecoEntrada(
+  preco: string,
+): number | null {
+  const limpo = preco
+    .replace("R$", "")
+    .replace(/\s/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+
+  if (limpo === "" || !/^\d+(\.\d+)?$/.test(limpo)) {
+    return null;
+  }
+
+  const numero = parseFloat(limpo);
+  return numero > 0 ? numero : null;
+}
+
 // Converte 1234.56 de volta em "R$ 1.234,56" para exibição
 export function formatPrecoBR(valor: number): string {
   return valor.toLocaleString("pt-BR", {
