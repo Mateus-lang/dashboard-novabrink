@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -23,7 +24,8 @@ import {
 import { ColetaItem } from "@/lib/sheets";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Search } from "lucide-react";
+import { ExcluirLinhaButton } from "./excluir-linha-button";
 import { PriceHealthBar } from "./price-health-bar";
 
 type Ordenacao = "Menor Preço" | "Maior Desconto %";
@@ -56,6 +58,18 @@ export function ColetaTable({
   const [tamanhoPagina, setTamanhoPagina] = useState(
     TAMANHO_PADRAO_COMPLETO,
   );
+  const [filtroSku, setFiltroSku] = useState("");
+
+  const termoSku = filtroSku.trim().toLocaleLowerCase("pt-BR");
+
+  // filtra antes de agrupar, pra o ranking mostrar as ofertas mais baratas
+  // só dos SKUs que casam com o termo
+  const itensFiltrados = useMemo(() => {
+    if (!termoSku) return itens;
+    return itens.filter((item) =>
+      item.sku.toLocaleLowerCase("pt-BR").includes(termoSku),
+    );
+  }, [itens, termoSku]);
 
   // no ranking a página conta SKUs (até 2 linhas cada), não linhas
   const itensPorPagina =
@@ -80,7 +94,7 @@ export function ColetaTable({
   // diferentes. No modo completo cada linha da planilha é sua própria unidade.
   const unidades = useMemo(() => {
     if (modo === "ranking") {
-      const grupos = agruparDoisMaisBaratosPorSku(itens);
+      const grupos = agruparDoisMaisBaratosPorSku(itensFiltrados);
       // o grupo vale o que vale sua oferta mais barata (primeira da lista)
       return [...grupos]
         .sort((a, b) => comparar(a.itens[0], b.itens[0]))
@@ -92,10 +106,10 @@ export function ColetaTable({
         );
     }
 
-    return [...itens]
+    return [...itensFiltrados]
       .sort(comparar)
       .map((item) => [{ item, abreGrupo: false }]);
-  }, [itens, modo, comparar]);
+  }, [itensFiltrados, modo, comparar]);
 
   const totalLinhas = useMemo(
     () =>
@@ -134,6 +148,8 @@ export function ColetaTable({
   }
 
   const mostraData = modo === "completo";
+  // Data (opcional) + 10 colunas fixas + a coluna de excluir
+  const totalColunas = (mostraData ? 1 : 0) + 11;
   const resumo =
     modo === "ranking"
       ? `${unidades.length} ${unidades.length === 1 ? "SKU" : "SKUs"} · ${totalLinhas} ${totalLinhas === 1 ? "oferta" : "ofertas"}`
@@ -141,11 +157,27 @@ export function ColetaTable({
 
   return (
     <div className="space-y-4">
-      {/* Seletor de ordenação */}
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-sm text-muted-foreground">
-          {resumo}
-        </span>
+      {/* Filtro por SKU e seletor de ordenação */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Filtrar por SKU"
+              aria-label="Filtrar por SKU"
+              value={filtroSku}
+              onChange={(e) => {
+                setFiltroSku(e.target.value);
+                setPagina(1);
+              }}
+              className="w-52 pl-8"
+            />
+          </div>
+          <span className="text-sm text-muted-foreground">
+            {resumo}
+          </span>
+        </div>
         <div className="flex items-center gap-2">
           {modo === "completo" && (
             <Select
@@ -215,9 +247,22 @@ export function ColetaTable({
               <TableHead className="text-right">
                 Preço Praticado
               </TableHead>
+              <TableHead className="w-10">
+                <span className="sr-only">Excluir</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
+            {linhasDaPagina.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={totalColunas}
+                  className="py-8 text-center text-muted-foreground"
+                >
+                  Nenhum SKU corresponde a “{filtroSku.trim()}”.
+                </TableCell>
+              </TableRow>
+            )}
             {linhasDaPagina.map(
               ({ item, abreGrupo }, index) => {
                 const praticado = parsePrecoBR(
@@ -234,7 +279,7 @@ export function ColetaTable({
 
                 return (
                   <TableRow
-                    key={`${item.sku}-${item.loja}-${item.dataBusca}-${paginaAtual}-${index}`}
+                    key={item.linha}
                     className={cn(
                       // separa visualmente cada par de ofertas do mesmo SKU
                       abreGrupo &&
@@ -296,6 +341,9 @@ export function ColetaTable({
                           precoSugerido={sugerido}
                         />
                       </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <ExcluirLinhaButton item={item} />
                     </TableCell>
                   </TableRow>
                 );

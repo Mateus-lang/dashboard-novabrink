@@ -18,6 +18,8 @@ export type ColetaItem = {
   rankMenorPreco: string;
   descontoVsMaior: string;
   menorPrecoSku: string;
+  // número da linha na Raw_Coleta (1 é o cabeçalho); usado para excluir
+  linha: number;
 };
 
 export type Gestor = {
@@ -56,7 +58,7 @@ export async function getColeta() {
   const dataRows = rows.slice(1);
 
   const items: ColetaItem[] = dataRows
-    .map((row) => ({
+    .map((row, indice) => ({
       marketplace: row[0] ?? "",
       sku: row[1] ?? "",
       versao: row[2] ?? "",
@@ -75,6 +77,8 @@ export async function getColeta() {
       descontoVsMaior: row[15] ?? "",
       // índice 16 é a coluna vazia — ignorada
       menorPrecoSku: row[17] ?? "",
+      // calculado antes do filter, pra linhas vazias não deslocarem a contagem
+      linha: indice + 2,
     }))
     .filter(
       (item) => item.marketplace !== "" && item.sku !== "",
@@ -226,4 +230,61 @@ export async function appendColeta(
   });
 
   return numeroDaLinha;
+}
+
+export type LinhaEsperada = {
+  sku: string;
+  url: string;
+  dataBusca: string;
+};
+
+export async function excluirLinhaColeta(
+  linha: number,
+  esperado: LinhaEsperada,
+): Promise<void> {
+  // A linha 2 é a fonte das fórmulas de H:I copiadas no appendColeta e a âncora
+  // das ARRAYFORMULA de N, O e P. Apagá-la quebra essas colunas inteiras.
+  if (!Number.isInteger(linha) || linha < 3) {
+    throw new Error(
+      "a linha 2 guarda as fórmulas da planilha e não pode ser excluída pelo app",
+    );
+  }
+
+  // O número da linha vem da última leitura do cliente. Se alguém inseriu ou
+  // excluiu linhas desde então, ele aponta pra outra coleta — por isso confere
+  // o conteúdo antes de apagar.
+  const atual = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    range: `${ABA}!A${linha}:L${linha}`,
+  });
+
+  const valores = atual.data.values?.[0] ?? [];
+  const confere =
+    (valores[1] ?? "") === esperado.sku &&
+    (valores[10] ?? "") === esperado.dataBusca &&
+    (valores[11] ?? "") === esperado.url;
+
+  if (!confere) {
+    throw new Error(
+      "a planilha mudou desde o carregamento; atualize a página e tente de novo",
+    );
+  }
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId: await obterIdDaAba(),
+              dimension: "ROWS",
+              startIndex: linha - 1,
+              endIndex: linha,
+            },
+          },
+        },
+      ],
+    },
+  });
 }
